@@ -1,0 +1,190 @@
+services:
+  zookeeper:
+    image: bitnami/zookeeper:3.8
+    container_name: zoo-keeper
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+      ZOO_TICK_TIME: 2000
+      ZOO_INIT_LIMIT: 10
+      ZOO_SYNC_LIMIT: 5
+      ZOO_HEAP_SIZE: "128"
+      ZOO_MAX_CLIENT_CNXNS: 60
+      ZOO_SERVERS: "zoo-keeper:2888:3888"
+      ZOO_4LW_COMMANDS_WHITELIST: "mntr,conf,ruok"
+    ports:
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    volumes:
+      - zookeeper_data:/bitnami/zookeeper
+    networks:
+      - elk
+
+  kafka:
+    image: bitnami/kafka:3.4
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_HEAP_OPTS: "-Xmx256M -Xms128M"
+      KAFKA_CFG_MAX_REQUEST_SIZE: 10485760
+      KAFKA_CFG_MESSAGE_MAX_BYTES: 10485760
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    volumes:
+      - kafka_data:/bitnami/kafka
+    networks:
+      - elk
+
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: trip_builder
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - elk
+
+  elasticsearch:
+    image: elasticsearch:7.17.9
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms128m -Xmx128m"
+      - bootstrap.memory_lock=false
+      - "http.host=0.0.0.0"
+      - "transport.host=0.0.0.0"
+      - "cluster.name=docker-cluster"
+      - "node.name=es01"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - elk
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q 'status.*green\\|status.*yellow' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    mem_limit: 512m
+    mem_reservation: 256m
+
+  logstash:
+    image: logstash:7.17.9
+    volumes:
+      - ./services/trip-auth-service/logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "5000:5000"
+    environment:
+      - LS_JAVA_OPTS=-Xmx256m -Xms256m
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - elk
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9600/_node/stats/pipeline | grep -q 'pipeline' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  kibana:
+    image: kibana:7.17.9
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - elk
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q 'Looking good' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # trip-auth-service:
+  #   build:
+  #     context: .
+  #     dockerfile: ./services/trip-auth-service/Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - DB_HOST=postgres
+  #     - DB_PORT=5432
+  #     - DB_USERNAME=postgres
+  #     - DB_PASSWORD=postgres
+  #     - DB_NAME=trip_builder
+  #     - KAFKA_BROKERS=kafka:9092
+  #     - ELASTICSEARCH_URL=http://elasticsearch:9200
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     kafka:
+  #       condition: service_healthy
+  #     elasticsearch:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./packages/trip-shared:/app/packages/trip-shared
+  #     - ./services/trip-auth-service:/app/services/trip-auth-service
+  #     - /app/node_modules
+  #   networks:
+  #     - elk
+
+networks:
+  elk:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  elasticsearch_data:
+  kafka_data:
+  zookeeper_data: 

@@ -1,0 +1,22 @@
+{
+  "name": "trip-mono",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=services/trip-auth-service\"",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "install:all": "npm install && npm install --workspaces --legacy-peer-deps"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1"
+  }
+}

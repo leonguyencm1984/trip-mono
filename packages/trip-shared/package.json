@@ -5,13 +5,19 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc -w"
+    "dev": "tsc -w",
+    "typeorm:sync": "ts-node ./src/db/init-db.ts",
+     "typeorm:schema:log": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:log -d ./data-source.ts"
   },
   "dependencies": {
+    "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
-    "class-transformer": "^0.5.1"
+    "pg": "^8.15.6",
+    "typeorm": "^0.3.22"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "ts-node-dev": "^2.0.0",
+    "@types/node": "^20.11.19"
   }
-} 
+}

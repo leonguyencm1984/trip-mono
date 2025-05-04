@@ -10,10 +10,9 @@ class RegisterDTO {
 }
 exports.RegisterDTO = RegisterDTO;
 class LoginDTO {
-    constructor(email, password, confirmPassword) {
+    constructor(email, password) {
         this.email = email;
         this.password = password;
-        this.confirmPassword = confirmPassword;
     }
 }
 exports.LoginDTO = LoginDTO;

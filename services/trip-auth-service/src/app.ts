@@ -30,19 +30,21 @@ createConnection({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432'),
   username: process.env.DB_USERNAME || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_NAME || 'trip_builder',
+  password: process.env.DB_PASSWORD || 'password',
+  database: process.env.DB_NAME || 'trip_user_db',
   synchronize: true,
   logging: false,
   entities: [path.join(__dirname, 'entities/**/*.ts')],
   migrations: [path.join(__dirname, 'migration/**/*.ts')],
   subscribers: [path.join(__dirname, 'subscriber/**/*.ts')],
 }).then(async () => {
+  logger.info('Auth Service connect Database successful');
   // Set up routes
   setRoutes(app);
-
+  logger.info('Auth Service Set Routes successful');
   // Connect to Kafka
   await connectKafka();
+  logger.info('Auth Service connect Kafka successful');
 
   // Start server
   app.listen(PORT, () => {

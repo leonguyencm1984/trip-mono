@@ -59,16 +59,17 @@ services:
     networks:
       - elk
 
-  postgres:
+  trip-user-db:
     image: postgres:14
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: trip_builder
+      POSTGRES_DB: trip_user_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./services/trip-auth-service/db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -151,33 +152,33 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-  # trip-auth-service:
-  #   build:
-  #     context: .
-  #     dockerfile: ./services/trip-auth-service/Dockerfile
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - DB_HOST=postgres
-  #     - DB_PORT=5432
-  #     - DB_USERNAME=postgres
-  #     - DB_PASSWORD=postgres
-  #     - DB_NAME=trip_builder
-  #     - KAFKA_BROKERS=kafka:9092
-  #     - ELASTICSEARCH_URL=http://elasticsearch:9200
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     kafka:
-  #       condition: service_healthy
-  #     elasticsearch:
-  #       condition: service_healthy
-  #   volumes:
-  #     - ./packages/trip-shared:/app/packages/trip-shared
-  #     - ./services/trip-auth-service:/app/services/trip-auth-service
-  #     - /app/node_modules
-  #   networks:
-  #     - elk
+  trip-auth-service:
+    build:
+      context: .
+      dockerfile: ./services/trip-auth-service/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=trip-user-db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=trip_user_db
+      - KAFKA_BROKERS=kafka:9092
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      trip-user-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./packages/trip-shared:/app/packages/trip-shared
+      - ./services/trip-auth-service:/app/services/trip-auth-service
+      - /app/node_modules
+    networks:
+      - elk
 
 networks:
   elk:

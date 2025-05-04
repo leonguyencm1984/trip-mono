@@ -5,7 +5,7 @@ export enum PaymentDetailType {
   // Fill in your types
 }
 
-@Entity()
+@Entity('payment_details')
 export class PaymentDetail {
   @PrimaryGeneratedColumn()
   id!: number;

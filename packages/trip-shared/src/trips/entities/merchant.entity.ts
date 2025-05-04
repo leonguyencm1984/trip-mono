@@ -6,7 +6,7 @@ export enum MerchantType {
   // Fill in your types
 }
 
-@Entity()
+@Entity('merchants')
 export class Merchant {
   @PrimaryGeneratedColumn()
   id!: number;

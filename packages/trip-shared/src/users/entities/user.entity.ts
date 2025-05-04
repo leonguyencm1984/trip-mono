@@ -8,7 +8,7 @@ export enum Status {
   // Fill in your statuses
 }
 
-@Entity()
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -41,7 +41,7 @@ export class User {
   trips!: Trip[];
 
   @Column({ nullable: true })
-  roleId!: number;
+  role_id!: number;
 
   @ManyToOne(() => PaymentInfo)
   paymentInfo!: PaymentInfo;

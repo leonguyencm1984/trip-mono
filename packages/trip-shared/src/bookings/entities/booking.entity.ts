@@ -3,7 +3,7 @@ import { Location } from '../../trips/entities/location.entity';
 import { Trip } from '../../trips/entities/trip.entity';
 import { PaymentInfo } from '../../payments/entities/payment-info.entity';
 import { Receipt } from '../../orders/entities/receipt.entity';
-@Entity()
+@Entity('bookings')
 export class Booking {
   [x: string]: any;
   @PrimaryGeneratedColumn('uuid')

@@ -1,9 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, OneToMany, Table } from 'typeorm';
 import { Booking } from '../../bookings/entities/booking.entity';
 import { PaymentInfo } from '../../payments/entities/payment-info.entity';
 
-
-@Entity()
+@Entity('orders')
 export class Order {
   @PrimaryGeneratedColumn()
   id!: number;

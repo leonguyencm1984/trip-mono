@@ -4,7 +4,7 @@ export enum PermissionEnum {
   // Fill in your permissions
 }
 
-@Entity()
+@Entity('permissions')
 export class Permission {
   @PrimaryGeneratedColumn()
   id!: number;

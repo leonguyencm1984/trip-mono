@@ -6,7 +6,7 @@ export enum AccommodationType {
   // Fill in your types
 }
 
-@Entity()
+@Entity('accommodations')
 export class Accommodation {
   @PrimaryGeneratedColumn()
   id!: number;

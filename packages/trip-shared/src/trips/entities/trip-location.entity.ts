@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity()
+@Entity('trip_locations')
 export class TripLocation {
   [x: string]: any;
   @PrimaryGeneratedColumn('uuid')

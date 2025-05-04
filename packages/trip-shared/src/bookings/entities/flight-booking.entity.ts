@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { Location } from '../../trips/entities/location.entity';
 
-@Entity()
+@Entity('flight_bookings')
 export class FlightBooking {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

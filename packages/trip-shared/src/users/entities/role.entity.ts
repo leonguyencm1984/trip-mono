@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
 import { Permission } from './permission.entity';
 
-@Entity()
+@Entity('roles')
 export class Roles {
   @PrimaryGeneratedColumn()
   id!: number;

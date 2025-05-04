@@ -9,7 +9,7 @@ export enum TripStatusEnum {
   // Fill in your statuses
 }
 
-@Entity()
+@Entity('trips')
 export class Trip {
   @PrimaryGeneratedColumn()
   id!: number;
